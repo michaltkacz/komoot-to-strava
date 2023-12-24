@@ -1,1 +1,2 @@
-src/gpx/*
+data
+src/__pycache__
