@@ -1,55 +1,9 @@
-import os
 import time
 import json
 import sys
+from datetime import datetime
 
 import config
-
-
-def is_dir_exist(dir_path):
-    return os.path.exists(dir_path)
-
-
-def is_file_exist(dir_path, file_name, file_extension):
-    if not is_dir_exist(dir_path):
-        return False
-
-    files_in_dir = os.listdir(dir_path)
-    for file in files_in_dir:
-        if str(file_name + file_extension) in file:
-            return True
-    return False
-
-
-def build_file_path(dir_path, file_name, file_extension):
-    return dir_path + file_name + file_extension
-
-
-def build_safe_file_path(dir_path, file_name, file_extension):
-    make_dir_if_not_exist(dir_path)
-    return get_first_unique_file_path(dir_path, file_name, file_extension)
-
-
-def get_first_unique_file_path(dir_path, file_name, file_extension):
-    path_args = (dir_path, file_name, file_extension)
-    is_file_already_exist = is_file_exist(*path_args)
-
-    index = 1
-    while is_file_already_exist:
-        path_args = (
-            dir_path,
-            file_name + config.common["file_name_safe_separator"] + str(index),
-            file_extension,
-        )
-        is_file_already_exist = is_file_exist(*path_args)
-        index += 1
-
-    return build_file_path(*path_args)
-
-
-def make_dir_if_not_exist(dir_path):
-    if not is_dir_exist(dir_path):
-        os.mkdir(dir_path)
 
 
 def get_nested(obj, keys, default=None):
@@ -69,7 +23,6 @@ def write_json_file(file_path, data):
 def read_json_file(file_path):
     with open(file_path, "r", encoding="utf-8") as json_file:
         data = json.load(json_file)
-
     return data
 
 
@@ -78,14 +31,18 @@ def write_text_file(file_path, data):
         gpx_file.write(data)
 
 
-def throttle_requests():
-    time.sleep(1)
+def throttle_requests(seconds=1):
+    time.sleep(seconds)
 
 
-def handle_request_error():
-    print("Bad request. Script will terminate.")
-    exit()
+def log(*values):
+    if config.common["enable_logs"]:
+        timestamp = datetime.now() if config.common["enable_logs_timestamp"] else ""
+        print("###", timestamp, *values)
 
 
-def exit():
+def handle_error(*values):
+    log("Error. Script terminated.")
+    if values:
+        log("Reason: ", *values)
     sys.exit()
